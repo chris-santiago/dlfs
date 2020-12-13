@@ -23,7 +23,9 @@ def sigmoid(x: np.ndarray) -> np.ndarray:
     return 1 / (1 + np.exp(-x))
 
 
-def get_derivative(func: ArrayFunction, input_: np.ndarray, delta: float = 0.001) -> np.ndarray:
+def get_derivative(
+    func: ArrayFunction, input_: np.ndarray, delta: float = 0.001
+) -> np.ndarray:
     """Evaluate the derivative of a function at every element in the input array."""
     return (func(input_ + delta) - func(input_ - delta)) / (2 * delta)
 
@@ -74,14 +76,18 @@ def deriv_three_chain(chain: Chain, x: np.ndarray) -> np.ndarray:
     return df1_df * df2_dx * df3_dx
 
 
-def multiple_inputs_add(x: np.ndarray, y: np.ndarray, sigma: ArrayFunction) -> np.ndarray:
+def multiple_inputs_add(
+    x: np.ndarray, y: np.ndarray, sigma: ArrayFunction
+) -> np.ndarray:
     """Apply function to multiple inputs with addition."""
-    return sigma(x+y)
+    return sigma(x + y)
 
 
-def multiple_inputs_add_backward(x: np.ndarray, y: np.ndarray, sigma: ArrayFunction) -> Tuple[np.ndarray, np.ndarray]:
+def multiple_inputs_add_backward(
+    x: np.ndarray, y: np.ndarray, sigma: ArrayFunction
+) -> Tuple[np.ndarray, np.ndarray]:
     """Compute derivative of function with respect to both inputs."""
-    a = x+y
+    a = x + y
     ds_da = get_derivative(sigma, a)
     da_dx, da_dy = 1, 1
     return ds_da * da_dx, ds_da * da_dy
@@ -96,5 +102,3 @@ def matmul_forward(x: np.ndarray, w: np.ndarray) -> np.ndarray:
 def matmul_backward_first(x: np.ndarray, w: np.ndarray) -> np.ndarray:
     """Compute backward pass of matrix multiplication wrt first argument."""
     return np.transpose(w, (1, 0))
-
-
