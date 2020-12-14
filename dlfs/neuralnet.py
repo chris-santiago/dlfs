@@ -448,9 +448,10 @@ class Trainer(object):
                         f"Loss increased after epoch {epoch + 1}, final loss was {self.best_loss:.3f}, using the model from epoch {epoch + 1 - eval_every}"
                     )
                     self.net = last_model
+                    # ensure self.optim is still updating self.net
                     setattr(
                         self.optim, "net", self.net
-                    )  # ensure self.optim is still updating self.net
+                    )
                     break
 
 
