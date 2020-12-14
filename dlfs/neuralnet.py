@@ -9,21 +9,22 @@ from dlfs.metrics import mae, rmse
 
 def assert_same_shape(array_1: np.ndarray, array_2: np.ndarray):
     """Ensure proper shapes."""
-    msg = f'''
+    msg = f"""
         Two ndarrays should have the same shape;
         instead, first ndarray's shape is {tuple(array_1.shape)}
         and second ndarray's shape is {tuple(array_2.shape)}.
-        '''
+        """
     assert array_1.shape == array_2.shape, msg
     return None
 
 
 class Operation:
     """Base class for an Operation in a neural network."""
+
     def __init__(self):
         self.input_ = None
         self.output = None
-        self.input_grad= None
+        self.input_grad = None
 
     def forward(self, input_: ndarray):
         """
@@ -55,6 +56,7 @@ class Operation:
 
 class ParamOperation(Operation):
     """An Operation with parameters."""
+
     def __init__(self, param: ndarray):
         """Constructor method."""
         super().__init__()
@@ -80,6 +82,7 @@ class ParamOperation(Operation):
 
 class WeightMultiply(ParamOperation):
     """Weight multiplication Operation for a neural network."""
+
     def __init__(self, weights: ndarray):
         """Initialize Operation with self.param = W."""
         super().__init__(weights)
@@ -99,6 +102,7 @@ class WeightMultiply(ParamOperation):
 
 class BiasAdd(ParamOperation):
     """Compute bias addition."""
+
     def __init__(self, bias: ndarray):
         """
         Initialize Operation with self.param = B.
@@ -123,6 +127,7 @@ class BiasAdd(ParamOperation):
 
 class Sigmoid(Operation):
     """Sigmoid activation function."""
+
     def __init__(self):
         """Constructor method."""
         super().__init__()
@@ -140,6 +145,7 @@ class Sigmoid(Operation):
 
 class Linear(Operation):
     """Identity activation function."""
+
     def __init__(self):
         """Constructor method."""
         super().__init__()
@@ -155,6 +161,7 @@ class Linear(Operation):
 
 class Layer:
     """A "layer" of neurons in a neural network."""
+
     def __init__(self, neurons: int):
         """
         The number of "neurons" roughly corresponds to the "breadth" of the layer
@@ -209,6 +216,7 @@ class Layer:
 
 class Dense(Layer):
     """A fully connected layer which inherits from Layer."""
+
     def __init__(self, neurons: int, activation: Operation = Sigmoid()):
         """Constructor method."""
         super().__init__(neurons)
@@ -224,13 +232,16 @@ class Dense(Layer):
         initial_bias = np.random.randn(1, self.neurons)
         self.params = [initial_weights, initial_bias]
         self.operations = [
-            WeightMultiply(self.params[0]), BiasAdd(self.params[1]), self.activation
+            WeightMultiply(self.params[0]),
+            BiasAdd(self.params[1]),
+            self.activation,
         ]
         return None
 
 
 class Loss:
     """The loss function for a neural network."""
+
     def __init__(self):
         """Constructor method."""
         self.prediction = None
@@ -262,22 +273,27 @@ class Loss:
 
 class MeanSquaredError(Loss):
     """Mean squared error loss."""
+
     def __init__(self) -> None:
         """Constructor method."""
         super().__init__()
 
     def _output(self) -> float:
         """Computes the per-observation squared error loss."""
-        loss = float(np.mean(np.power(self.prediction - self.target, 2)))
+        loss = (
+            np.sum(np.power(self.prediction - self.target, 2))
+            / self.prediction.shape[0]
+        )
         return loss
 
     def _input_grad(self) -> ndarray:
         """Computes the loss gradient with respect to the input for MSE loss."""
-        return 2.0 * (self.prediction - self.target)  / self.prediction.shape[0]
+        return 2.0 * (self.prediction - self.target) / self.prediction.shape[0]
 
 
 class NeuralNetwork:
     """The class for a neural network."""
+
     def __init__(self, layers: List[Layer], loss: Loss, seed: int = 1):
         """Constructor method."""
         self.layers = layers
@@ -325,6 +341,7 @@ class NeuralNetwork:
 
 class Optimizer(object):
     """Base class for a neural network optimizer."""
+
     def __init__(self, lr: float = 0.01):
         """Every optimizer must have an initial learning rate."""
         self.lr = lr
@@ -332,10 +349,11 @@ class Optimizer(object):
     def step(self) -> None:
         """Every optimizer must implement the "step" function."""
         pass
-    
+
 
 class SGD(Optimizer):
     """Stochastic gradient descent optimizer."""
+
     def __init__(self, lr: float = 0.01) -> None:
         """Constructor method."""
         super().__init__(lr)
@@ -349,21 +367,23 @@ class SGD(Optimizer):
         if self.net:
             for (param, param_grad) in zip(self.net.params(), self.net.param_grads()):
                 param -= self.lr * param_grad
-        raise AttributeError('Net attribute cannot be empty.')
+        else:
+            raise AttributeError("Net attribute cannot be empty.")
 
 
 class Trainer(object):
     """Trains a neural network."""
+
     def __init__(self, net: NeuralNetwork, optim: Optimizer, batch_size: int = 32):
         """
-        Requires a neural network and an optimizer in order for training to occur. 
+        Requires a neural network and an optimizer in order for training to occur.
         Assign the neural network as an instance variable to the optimizer.
         """
         self.net = net
         self.optim = optim
         self.batch_size = batch_size
         self.best_loss = 1e9
-        setattr(self.optim, 'net', self.net)
+        setattr(self.optim, "net", self.net)
 
     @staticmethod
     def permute_data(X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -372,20 +392,31 @@ class Trainer(object):
         return X[perm], y[perm]
 
     @staticmethod
-    def generate_batches(X: ndarray, y: ndarray, batch_size: int) -> Tuple[np.ndarray, np.ndarray]:
+    def generate_batches(
+        X: ndarray, y: ndarray, batch_size: int
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """Generates batches for training."""
-        assert_same_shape(X, y)
+        assert X.shape[0] == y.shape[0]
+
         for start in range(0, X.shape[0], batch_size):
-            x_batch, y_batch = X[start:start + batch_size], y[start:start + batch_size]
+            x_batch, y_batch = (
+                X[start : start + batch_size],
+                y[start : start + batch_size],
+            )
             yield x_batch, y_batch
 
-    def fit(self, x_train: ndarray, y_train: ndarray,
-            x_valid: ndarray, y_valid: ndarray,
-            epochs: int = 100,
-            eval_every: int = 10,
-            batch_size: int = 32,
-            seed: int = 1,
-            restart: bool = True) -> None:
+    def fit(
+        self,
+        x_train: ndarray,
+        y_train: ndarray,
+        x_valid: ndarray,
+        y_valid: ndarray,
+        epochs: int = 100,
+        eval_every: int = 10,
+        batch_size: int = 32,
+        seed: int = 1,
+        restart: bool = True,
+    ) -> None:
         """
         Fits the neural network on the training data for a certain number of epochs.
         Every "eval_every" epochs, it evaluated the neural network on the testing data.
@@ -414,9 +445,12 @@ class Trainer(object):
                     self.best_loss = loss
                 else:
                     print(
-                        f"""Loss increased after epoch {epoch + 1}, final loss was {self.best_loss:.3f}, using the model from epoch {epoch + 1 - eval_every}""")
+                        f"Loss increased after epoch {epoch + 1}, final loss was {self.best_loss:.3f}, using the model from epoch {epoch + 1 - eval_every}"
+                    )
                     self.net = last_model
-                    setattr(self.optim, 'net', self.net)  # ensure self.optim is still updating self.net
+                    setattr(
+                        self.optim, "net", self.net
+                    )  # ensure self.optim is still updating self.net
                     break
 
 
@@ -425,7 +459,7 @@ def eval_regression_model(model: NeuralNetwork, x_test: ndarray, y_test: ndarray
     preds = model.forward(x_test).reshape(-1, 1)
     print(
         f"""
-        Mean absolute error: {round(mae(y_test, preds))} \n
-        Root mean squared error: {round(rmse(y_test, preds))}
+        Mean absolute error: {round(mae(y_test, preds), 2)} \n
+        Root mean squared error: {round(rmse(y_test, preds), 2)}
         """
     )
