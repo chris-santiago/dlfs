@@ -8,7 +8,7 @@ from dlfs.nn.network import NeuralNetwork
 from dlfs.nn.optimizers import Optimizer
 
 
-class Trainer(object):
+class Trainer:
     """Trains a neural network."""
 
     def __init__(self, net: NeuralNetwork, optim: Optimizer, batch_size: int = 32):
@@ -70,7 +70,7 @@ class Trainer(object):
             x_train, y_train = self.permute_data(x_train, y_train)
             batch_generator = self.generate_batches(x_train, y_train, batch_size)
 
-            for batch_num, (x_batch, y_batch) in enumerate(batch_generator):
+            for _, (x_batch, y_batch) in enumerate(batch_generator):
                 self.net.train_batch(x_batch, y_batch)
                 self.optim.step()
 
@@ -86,7 +86,5 @@ class Trainer(object):
                     )
                     self.net = last_model
                     # ensure self.optim is still updating self.net
-                    setattr(
-                        self.optim, "net", self.net
-                    )
+                    setattr(self.optim, "net", self.net)
                     break

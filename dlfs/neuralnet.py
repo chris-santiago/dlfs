@@ -339,7 +339,7 @@ class NeuralNetwork:
             yield from layer.param_grads
 
 
-class Optimizer(object):
+class Optimizer:
     """Base class for a neural network optimizer."""
 
     def __init__(self, lr: float = 0.01):
@@ -371,7 +371,7 @@ class SGD(Optimizer):
             raise AttributeError("Net attribute cannot be empty.")
 
 
-class Trainer(object):
+class Trainer:
     """Trains a neural network."""
 
     def __init__(self, net: NeuralNetwork, optim: Optimizer, batch_size: int = 32):
@@ -449,9 +449,7 @@ class Trainer(object):
                     )
                     self.net = last_model
                     # ensure self.optim is still updating self.net
-                    setattr(
-                        self.optim, "net", self.net
-                    )
+                    setattr(self.optim, "net", self.net)
                     break
 
 

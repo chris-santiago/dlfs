@@ -1,4 +1,4 @@
-class Optimizer(object):
+class Optimizer:
     """Base class for a neural network optimizer."""
 
     def __init__(self, lr: float = 0.01):
