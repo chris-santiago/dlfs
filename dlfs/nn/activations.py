@@ -53,8 +53,8 @@ class Tanh(Operation):
         return output_grad * (1 - self.output * self.output)
 
 
-class ReLU(Operation):
-    """Hyperbolic tangent activation function."""
+class ReLu(Operation):
+    """Rectified Linear Unit activation function."""
 
     def __init__(self) -> None:
         super().__init__()

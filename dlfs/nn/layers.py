@@ -6,6 +6,7 @@ from numpy import ndarray
 from dlfs.nn.core import Operation, ParamOperation
 from dlfs.nn.activations import Sigmoid
 from dlfs.nn.dense import WeightMultiply, BiasAdd
+from dlfs.nn.dropout import Dropout
 from dlfs.nn.utils import assert_same_shape
 
 
@@ -67,23 +68,32 @@ class Layer:
 class Dense(Layer):
     """A fully connected layer which inherits from Layer."""
 
-    def __init__(self, neurons: int, activation: Operation = Sigmoid()):
+    def __init__(self, neurons: int, activation: Operation = Sigmoid(), conv_in: bool = False,
+                 dropout: float = 1.0, weight_init: str = 'standard'):
         """Constructor method."""
         super().__init__(neurons)
         self.activation = activation
+        self.conv_in = conv_in
+        self.dropout = dropout
+        self.weight_init = weight_init
         self.seed = None
 
     def _setup_layer(self, input_: ndarray) -> None:
         """Defines the operations of a fully connected layer."""
         if self.seed:
             np.random.seed(self.seed)
-
-        initial_weights = np.random.randn(input_.shape[1], self.neurons)
-        initial_bias = np.random.randn(1, self.neurons)
+        num_in = input_.shape[1]
+        scale = 1.0
+        if self.weight_init == 'glorot':
+            scale = 2 / (num_in + self.neurons)
+        initial_weights = np.random.normal(loc=0, scale=scale, size=(num_in, self.neurons))
+        initial_bias = np.random.normal(loc=0, scale=scale, size=(1, self.neurons))
         self.params = [initial_weights, initial_bias]
         self.operations = [
             WeightMultiply(self.params[0]),
             BiasAdd(self.params[1]),
             self.activation,
         ]
+        if self.dropout < 1.0:
+            self.operations.append(Dropout(self.dropout))
         return None
