@@ -11,7 +11,7 @@ class WeightMultiply(ParamOperation):
         """Initialize Operation with self.param = W."""
         super().__init__(weights)
 
-    def _output(self) -> ndarray:
+    def _output(self, inference: bool) -> ndarray:
         """Compute output."""
         return np.dot(self.input_, self.param)
 
@@ -35,7 +35,7 @@ class BiasAdd(ParamOperation):
         assert bias.shape[0] == 1
         super().__init__(bias)
 
-    def _output(self) -> ndarray:
+    def _output(self, inference: bool) -> ndarray:
         """Compute output."""
         return self.input_ + self.param
 

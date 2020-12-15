@@ -52,12 +52,18 @@ class Trainer:
         eval_every: int = 10,
         batch_size: int = 32,
         seed: int = 1,
+        single_output: bool = False,
         restart: bool = True,
+        early_stopping: bool = True,
+        conv_testing: bool = False,
     ) -> None:
         """
         Fits the neural network on the training data for a certain number of epochs.
         Every "eval_every" epochs, it evaluated the neural network on the testing data.
         """
+        setattr(self.optim, "max_epochs", epochs)
+        self.optim.setup_decay()
+
         np.random.seed(seed)
         if restart:
             for layer in self.net.layers:
@@ -75,16 +81,21 @@ class Trainer:
                 self.optim.step()
 
             if (epoch + 1) % eval_every == 0:
-                valid_preds = self.net.forward(x_valid)
+                valid_preds = self.net.forward(x_valid, inference=True)
                 loss = self.net.loss.forward(valid_preds, y_valid)
-                if loss < self.best_loss:
-                    print(f"Validation loss after {epoch + 1} epochs is {loss:.3f}")
-                    self.best_loss = loss
+                if early_stopping:
+                    if loss < self.best_loss:
+                        print(f"Validation loss after {epoch + 1} epochs is {loss:.3f}")
+                        self.best_loss = loss
+                    else:
+                        print(
+                            f"Loss increased after epoch {epoch + 1}, final loss was {self.best_loss:.3f}, using the model from epoch {epoch + 1 - eval_every}"
+                        )
+                        self.net = last_model
+                        # ensure self.optim is still updating self.net
+                        setattr(self.optim, "net", self.net)
+                        break
                 else:
-                    print(
-                        f"Loss increased after epoch {epoch + 1}, final loss was {self.best_loss:.3f}, using the model from epoch {epoch + 1 - eval_every}"
-                    )
-                    self.net = last_model
-                    # ensure self.optim is still updating self.net
-                    setattr(self.optim, "net", self.net)
-                    break
+                    print(f"Validation loss after {epoch + 1} epochs is {loss:.3f}")
+            if self.optim.final_lr:
+                self.optim.decay_lr()

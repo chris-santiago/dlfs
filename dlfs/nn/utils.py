@@ -14,17 +14,30 @@ def assert_same_shape(array_1: ndarray, array_2: ndarray):
     return None
 
 
+def normalize(a: np.ndarray):
+    """Normalize a single-class array."""
+    other = 1 - a
+    return np.concatenate([a, other], axis=1)
+
+
+def unnormalize(a: np.ndarray):
+    """Un-Normalize probabilities for a single-class array."""
+    if a.ndim < 1:
+        a = a.reshape(-1, 1)
+    return a[:, 0, np.newaxis]
+
+
 def softmax(x, axis=None):
-    """Softmax function."""
+    """Compute softmax transform."""
     return np.exp(x - logsumexp(x, axis=axis, keepdims=True))
 
 
-# def normalize(a: np.ndarray):
-#     """Normalize an array."""
-#     other = 1 - a
-#     return np.concatenate([a, other], axis=1)
-#
-#
-# def unnormalize(a: np.ndarray):
-#     """Un-Normalize an array."""
-#     return a[np.newaxis, 0]
+def calc_accuracy_model(model, test_set, actual):
+    acc = (
+        np.equal(
+            np.argmax(model.forward(test_set, inference=True), axis=1), actual
+        ).sum()
+        * 100.0
+        / test_set.shape[0]
+    )
+    print(f"The model validation accuracy is: {acc:.2f}")

@@ -28,14 +28,14 @@ class Layer:
         """The _setup_layer function must be implemented for each layer."""
         raise NotImplementedError()
 
-    def forward(self, input_: ndarray) -> ndarray:
+    def forward(self, input_: ndarray, inference: bool = False) -> ndarray:
         """Passes input forward through a series of operations."""
         if self.first:
             self._setup_layer(input_)
             self.first = False
         self.input_ = input_
         for operation in self.operations:
-            input_ = operation.forward(input_)
+            input_ = operation.forward(input_, inference)
         self.output = input_
         return self.output
 

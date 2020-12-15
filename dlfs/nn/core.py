@@ -11,13 +11,13 @@ class Operation:
         self.output = None
         self.input_grad = None
 
-    def forward(self, input_: ndarray):
+    def forward(self, input_: ndarray, inference: bool = False):
         """
         Calls the self._input_grad() function.
         Checks that the appropriate shapes match.
         """
         self.input_ = input_
-        self.output = self._output()
+        self.output = self._output(inference)
         return self.output
 
     def backward(self, output_grad: ndarray) -> ndarray:
@@ -30,7 +30,7 @@ class Operation:
         assert_same_shape(self.input_, self.input_grad)
         return self.input_grad
 
-    def _output(self) -> ndarray:
+    def _output(self, inference: bool) -> ndarray:
         """The _output method must be defined for each Operation."""
         raise NotImplementedError()
 
@@ -57,7 +57,6 @@ class ParamOperation(Operation):
         self.input_grad = self._input_grad(output_grad)
         self.param_grad = self._param_grad(output_grad)
         assert_same_shape(self.input_, self.input_grad)
-        assert_same_shape(self.param, self.param_grad)
         return self.input_grad
 
     def _param_grad(self, output_grad: ndarray) -> ndarray:
