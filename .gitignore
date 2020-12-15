@@ -3,3 +3,5 @@ dlfs.egg-info
 */.ipynb_checkpoints
 *.pkl
 *.gz
+notebooks/*.pkl
+notebooks/*.gz
